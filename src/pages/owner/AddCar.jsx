@@ -54,8 +54,6 @@ const AddCar = () => {
     try {
       const formData = new FormData();
 
-      // CHANGED: Append each file with the same key 'images'
-      // This allows multer.array('images') on the backend to pick them up
       images.forEach((image) => {
         formData.append("images", image);
       });
@@ -99,8 +97,8 @@ const AddCar = () => {
   return (
     <div className="px-4 py-10 md:px-10 flex-1">
       <Title
-        title="Add New Car"
-        subTitle="Fill in details to list a new car for booking."
+        title="Add New Vehicle"
+        subTitle="Fill in details to list a new vehicle for booking."
       />
 
       <form
@@ -110,7 +108,7 @@ const AddCar = () => {
         {/* Car Images Upload */}
         <div className="flex flex-col gap-2">
           <p className="text-sm text-gray-500">
-            Upload Car Images (Select Multiple)
+            Upload Vehicle Images (Select Multiple)
           </p>
           <div className="flex flex-wrap gap-3">
             {/* Upload Trigger Label */}
@@ -210,6 +208,8 @@ const AddCar = () => {
               <option value="Van">Van</option>
               <option value="Luxury">Luxury</option>
               <option value="Sports">Sports</option>
+              <option value="Scooter">Scooter</option>
+              <option value="Bike">Bike</option>
             </select>
           </div>
         </div>

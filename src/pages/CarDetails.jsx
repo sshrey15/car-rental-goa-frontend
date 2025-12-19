@@ -4,7 +4,6 @@ import { assets } from "../assets/assets";
 import Loader from "../components/Loader";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
-import { motion } from "motion/react";
 
 const CarDetails = () => {
   const { id } = useParams();
@@ -17,16 +16,27 @@ const CarDetails = () => {
 
   // New state to handle the currently displayed image in the gallery
   const [activeImage, setActiveImage] = useState(null);
+  const [payPartial, setPayPartial] = useState(false);
 
   const currency = import.meta.env.VITE_CURRENCY;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Calculate price for payment simulation
+      const picked = new Date(pickupDate);
+      const returned = new Date(returnDate);
+      const noOfDays = Math.ceil((returned - picked) / (1000 * 60 * 60 * 24));
+      const price = car.pricePerDay * noOfDays;
+      
+      // Simulate payment (e.g., 50% advance or full payment)
+      const amountPaid = payPartial ? price / 2 : price; 
+
       const { data } = await axios.post("/api/bookings/create", {
         car: id,
         pickupDate,
         returnDate,
+        amountPaid
       });
 
       if (data.success) {
@@ -211,8 +221,21 @@ const CarDetails = () => {
             />
           </div>
 
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="pay-partial" 
+              checked={payPartial} 
+              onChange={(e) => setPayPartial(e.target.checked)}
+              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+            />
+            <label htmlFor="pay-partial" className="text-sm font-medium text-gray-700">
+              Pay 50% Advance Now
+            </label>
+          </div>
+
           <button className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer shadow-md hover:shadow-lg">
-            Book Now
+            {payPartial ? "Pay 50% & Book" : "Pay Full & Book"}
           </button>
 
           <p className="text-center text-sm text-gray-400">

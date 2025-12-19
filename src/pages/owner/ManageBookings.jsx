@@ -52,6 +52,7 @@ const ManageBookings = () => {
               <th className="p-3 font-medium">Car</th>
               <th className="p-3 font-medium max-md:hidden">Date Range</th>
               <th className="p-3 font-medium">Total</th>
+              <th className="p-3 font-medium max-md:hidden">User Info</th>
               <th className="p-3 font-medium max-md:hidden">Payment</th>
               <th className="p-3 font-medium">Actions</th>
             </tr>
@@ -88,8 +89,13 @@ const ManageBookings = () => {
                 </td>
 
                 <td className="p-3 max-md:hidden">
+                  <p className="font-medium">{booking.user.name}</p>
+                  <p className="text-xs">{booking.user.phone}</p>
+                </td>
+
+                <td className="p-3 max-md:hidden">
                   <span className="bg-gray-100 px-3 py-1 rounded-full text-xs">
-                    offline
+                    Paid: {currency}{booking.amountPaid || 0}
                   </span>
                 </td>
 

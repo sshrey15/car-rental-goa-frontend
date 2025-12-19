@@ -3,7 +3,6 @@ import { assets} from '../assets/assets'
 import Title from '../components/Title'
 import { useAppContext } from '../context/AppContext'
 import toast from 'react-hot-toast'
-import { motion } from 'motion/react'
 
 const MyBookings = () => {
 
@@ -52,7 +51,11 @@ const MyBookings = () => {
 
             <div className='md:col-span-1'>
               <div className='rounded-md overflow-hidden mb-3'>
-                <img src={booking.car.image} alt="" className='w-full h-auto aspect-video object-cover'/>
+                <img 
+                  src={booking.car.images && booking.car.images.length > 0 ? booking.car.images[0] : booking.car.image} 
+                  alt="" 
+                  className='w-full h-auto aspect-video object-cover'
+                />
               </div>
               <p className='text-lg font-medium mt-2'>{booking.car.brand} {booking.car.model}</p>
 
@@ -81,6 +84,17 @@ const MyBookings = () => {
                   <p>{booking.car.location}</p>
                 </div>
               </div>
+
+              {/* Owner Contact Info */}
+              {booking.owner && (
+                <div className='flex items-start gap-2 mt-3'>
+                  <img src={assets.phone_icon || assets.location_icon_colored} alt="" className='w-4 h-4 mt-1'/> {/* Fallback icon if phone_icon missing */}
+                  <div>
+                    <p className='text-gray-500'>Owner Contact</p>
+                    <p>{booking.owner.name} - {booking.owner.phone}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
            {/* Price */}
@@ -88,7 +102,15 @@ const MyBookings = () => {
               <div className='text-sm text-gray-500 text-right'>
                 <p>Total Price</p>
                 <h1 className='text-2xl font-semibold text-primary'>{currency}{booking.price}</h1>
-                <p>Booked on {booking.createdAt.split('T')[0]}</p>
+                
+                <div className="mt-2 text-xs">
+                  <p className="text-green-600">Paid: {currency}{booking.amountPaid || 0}</p>
+                  {booking.price > (booking.amountPaid || 0) && (
+                    <p className="text-red-500 font-medium">Due: {currency}{booking.price - (booking.amountPaid || 0)}</p>
+                  )}
+                </div>
+
+                <p className="mt-2">Booked on {booking.createdAt.split('T')[0]}</p>
               </div>
            </div>
 
