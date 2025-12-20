@@ -2,8 +2,7 @@ import React, { useState } from 'react'
 import { assets, menuLinks } from '../assets/assets'
 import {Link, useLocation, useNavigate} from 'react-router-dom'
 import { useAppContext } from '../context/AppContext'
-import {motion} from 'motion/react'
-
+import { motion } from 'motion/react'
 const Navbar = () => {
 
     const {setShowLogin, user, logout, isOwner} = useAppContext()
@@ -37,7 +36,7 @@ const Navbar = () => {
 
             <div className='flex max-sm:flex-col items-start sm:items-center gap-6'>
 
-                <button onClick={()=> isOwner ? navigate('/owner') : navigate('/host')} className="cursor-pointer">{isOwner ? 'Dashboard' : 'List vehicles'}</button>
+                <button onClick={()=> isOwner ? navigate('/owner') : navigate('/host')} className="cursor-pointer">{isOwner ? 'Dashboard' : 'List Your Vehicle'}</button>
 
                 <button onClick={()=> {user ? logout() : setShowLogin(true)}} className="cursor-pointer px-8 py-2 bg-primary hover:bg-primary-dull transition-all text-white rounded-lg">{user ? 'Logout' : 'Login'}</button>
             </div>

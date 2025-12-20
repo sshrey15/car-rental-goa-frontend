@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { assets } from "../../assets/assets";
 import Title from "../../components/owner/Title";
 import { useAppContext } from "../../context/AppContext";
@@ -9,7 +9,7 @@ const ManageCars = () => {
 
   const [cars, setCars] = useState([]);
 
-  const fetchOwnerCars = async () => {
+  const fetchOwnerCars = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/owner/cars");
       if (data.success) {
@@ -20,7 +20,7 @@ const ManageCars = () => {
     } catch (error) {
       toast.error(error.message);
     }
-  };
+  }, [axios]);
 
   const toggleAvailability = async (carId) => {
     try {
@@ -39,7 +39,7 @@ const ManageCars = () => {
   const deleteCar = async (carId) => {
     try {
       const confirm = window.confirm(
-        "Are you sure you want to delete this car?",
+        "Are you sure you want to delete this vehicle?",
       );
 
       if (!confirm) return null;
@@ -57,22 +57,25 @@ const ManageCars = () => {
   };
 
   useEffect(() => {
-    isOwner && fetchOwnerCars();
-  }, [isOwner]);
+    if (isOwner) {
+      fetchOwnerCars();
+    }
+  }, [isOwner, fetchOwnerCars]);
 
   return (
     <div className="px-4 pt-10 md:px-10 w-full">
       <Title
-        title="Manage Cars"
-        subTitle="View all listed cars, update their details, or remove them from the booking platform."
+        title="Manage Vehicles"
+        subTitle="View all listed vehicles, update their details, or remove them from the booking platform."
       />
 
       <div className="max-w-3xl w-full rounded-md overflow-hidden border border-borderColor mt-6">
         <table className="w-full border-collapse text-left text-sm text-gray-600">
           <thead className="text-gray-500">
             <tr>
-              <th className="p-3 font-medium">Car</th>
+              <th className="p-3 font-medium">Vehicle</th>
               <th className="p-3 font-medium max-md:hidden">Category</th>
+              <th className="p-3 font-medium max-md:hidden">Location</th>
               <th className="p-3 font-medium">Price</th>
               <th className="p-3 font-medium max-md:hidden">Status</th>
               <th className="p-3 font-medium">Actions</th>
@@ -102,6 +105,7 @@ const ManageCars = () => {
                 </td>
 
                 <td className="p-3 max-md:hidden">{car.category}</td>
+                <td className="p-3 max-md:hidden">{car.location}</td>
                 <td className="p-3">
                   {currency}
                   {car.pricePerDay}/day

@@ -46,7 +46,7 @@ const HostLanding = () => {
           <p 
             className="text-xl text-gray-300 mb-8"
           >
-            Join thousands of hosts who are earning extra income by sharing their cars, bikes, and scooters. It's safe, simple, and secure.
+            Join thousands of hosts who are earning extra income by sharing their vehicles. It's safe, simple, and secure.
           </p>
           <button 
             onClick={handleStartHosting}
@@ -66,7 +66,7 @@ const HostLanding = () => {
       <div className="py-20 px-6 md:px-16 lg:px-24 xl:px-32">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Why host on our platform?</h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">We provide the tools, insurance, and support you need to build a thriving car sharing business.</p>
+          <p className="text-gray-500 max-w-2xl mx-auto">We provide the tools, insurance, and support you need to build a thriving vehicle sharing business.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">

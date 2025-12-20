@@ -88,7 +88,7 @@ const Login = () => {
                     {isOtpSent && (
                         <div className="mt-4">
                             <p>OTP</p>
-                            <input onChange={(e) => setOtp(e.target.value)} value={otp} placeholder="Enter OTP (123456)" className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary" type="text" required />
+                            <input onChange={(e) => setOtp(e.target.value)} value={otp} placeholder="Enter OTP sent to WhatsApp" className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary" type="text" required />
                         </div>
                     )}
                 </div>

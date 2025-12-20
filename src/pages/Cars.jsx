@@ -66,7 +66,7 @@ const Cars = () => {
           transition={{ duration: 0.6, ease: 'easeOut' }}
 
       className='flex flex-col items-center py-20 bg-light max-md:px-4'>
-        <Title title='Available Cars' subTitle='Browse our selection of premium vehicles available for your next adventure'/>
+        <Title title='Available Vehicles' subTitle='Browse our selection of premium vehicles available for your next adventure'/>
 
         <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -88,7 +88,7 @@ const Cars = () => {
         transition={{ delay: 0.6, duration: 0.5 }}
 
       className='px-6 md:px-16 lg:px-24 xl:px-32 mt-10'>
-        <p className='text-gray-500 xl:px-20 max-w-7xl mx-auto'>Showing {filteredCars.length} Cars</p>
+        <p className='text-gray-500 xl:px-20 max-w-7xl mx-auto'>Showing {filteredCars.length} Vehicles</p>
 
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-4 xl:px-20 max-w-7xl mx-auto'>
           {filteredCars.map((car, index)=> (

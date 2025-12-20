@@ -27,6 +27,7 @@ const AddCar = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isCustomLocation, setIsCustomLocation] = useState(false);
 
   // Cleanup object URLs when images change
   useEffect(() => {
@@ -78,6 +79,7 @@ const AddCar = () => {
           location: "",
           description: "",
         });
+        setIsCustomLocation(false);
       } else {
         toast.error(data.message);
       }
@@ -261,16 +263,35 @@ const AddCar = () => {
         <div className="flex flex-col w-full">
           <label>Location</label>
           <select
-            onChange={(e) => setCar({ ...car, location: e.target.value })}
-            value={car.location}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "Other") {
+                setCar({ ...car, location: "" });
+                setIsCustomLocation(true);
+              } else {
+                setCar({ ...car, location: val });
+                setIsCustomLocation(false);
+              }
+            }}
+            value={isCustomLocation ? "Other" : car.location}
             className="px-3 py-2 mt-1 border border-borderColor rounded-md outline-none"
           >
             <option value="">Select Location</option>
             <option value="Airport">Airport</option>
             <option value="City Center">City Center</option>
             <option value="Train Station">Train Station</option>
-            {/* Add your dynamic cities here if available */}
+            <option value="Other">Other (Custom)</option>
           </select>
+          {isCustomLocation && (
+            <input
+              type="text"
+              placeholder="Enter custom location"
+              className="px-3 py-2 mt-2 border border-borderColor rounded-md outline-none"
+              value={car.location}
+              onChange={(e) => setCar({ ...car, location: e.target.value })}
+              required
+            />
+          )}
         </div>
 
         {/* Car Description */}
@@ -296,7 +317,7 @@ const AddCar = () => {
                 alt=""
                 className="w-4 h-4 brightness-0 invert"
               />
-              List Your Car
+              List Your Vehicle
             </>
           )}
         </button>
@@ -337,6 +358,7 @@ export default AddCar;
 //   })
 
 //   const [isLoading, setIsLoading] = useState(false)
+//   const [isCustomLocation, setIsCustomLocation] = useState(false)
 
 //   // Cleanup object URLs when images change
 //   useEffect(() => {
@@ -390,6 +412,7 @@ export default AddCar;
 //           location: '',
 //           description: '',
 //         })
+//         setIsCustomLocation(false)
 //       } else {
 //         toast.error(data.message)
 //       }
@@ -509,13 +532,32 @@ export default AddCar;
 //         {/* Car Location */}
 //         <div className='flex flex-col w-full'>
 //           <label>Location</label>
-//           <select onChange={e => setCar({ ...car, location: e.target.value })} value={car.location} className='px-3 py-2 mt-1 border border-borderColor rounded-md outline-none'>
+//           <select onChange={e => {
+//               const val = e.target.value;
+//               if (val === "Other") {
+//                 setCar({ ...car, location: "" });
+//                 setIsCustomLocation(true);
+//               } else {
+//                 setCar({ ...car, location: val });
+//                 setIsCustomLocation(false);
+//               }
+//             }} value={isCustomLocation ? "Other" : car.location} className='px-3 py-2 mt-1 border border-borderColor rounded-md outline-none'>
 //             <option value="">Select Location</option>
 //             <option value="Airport">Airport</option>
 //             <option value="City Center">City Center</option>
 //             <option value="Train Station">Train Station</option>
-//             {/* Add your dynamic cities here if available */}
+//             <option value="Other">Other (Custom)</option>
 //           </select>
+//           {isCustomLocation && (
+//             <input
+//               type="text"
+//               placeholder="Enter custom location"
+//               className='px-3 py-2 mt-2 border border-borderColor rounded-md outline-none'
+//               value={car.location}
+//               onChange={e => setCar({ ...car, location: e.target.value })}
+//               required
+//             />
+//           )}
 //         </div>
 
 //         {/* Car Description */}

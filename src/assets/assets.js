@@ -40,6 +40,7 @@ import car_image1 from "./car_image1.png";
 import car_image2 from "./car_image2.png";
 import car_image3 from "./car_image3.png";
 import car_image4 from "./car_image4.png";
+import bike from "./bike.png";
 
 export const cityList = ["Panjim KTC", "Margao KTC", "Airport", "Calangute"];
 
@@ -78,6 +79,7 @@ export const assets = {
   filter_icon,
   testimonial_image_1,
   testimonial_image_2,
+  bike,
   main_car,
   banner_car_image,
   car_image1,
@@ -90,7 +92,7 @@ export const assets = {
 
 export const menuLinks = [
   { name: "Home", path: "/" },
-  { name: "Cars", path: "/cars" },
+  { name: "Vehicles", path: "/cars" },
   { name: "My Bookings", path: "/my-bookings" },
 ];
 
@@ -102,13 +104,13 @@ export const ownerMenuLinks = [
     coloredIcon: dashboardIconColored,
   },
   {
-    name: "Add car",
+    name: "Add Vehicle",
     path: "/owner/add-car",
     icon: addIcon,
     coloredIcon: addIconColored,
   },
   {
-    name: "Manage Cars",
+    name: "Manage Vehicles",
     path: "/owner/manage-cars",
     icon: carIcon,
     coloredIcon: carIconColored,
