@@ -64,7 +64,7 @@ const AddCar = () => {
       const { data } = await axios.post("/api/owner/add-car", formData);
 
       if (data.success) {
-        toast.success(data.message);
+        toast.success("Vehicle added! Waiting for admin approval.");
         setImages([]); // Clear images
         setPreviewUrls([]);
         setCar({
