@@ -4,7 +4,7 @@ import { assets } from "../assets/assets";
 import Loader from "../components/Loader";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
-
+import{ motion} from "motion/react";
 const CarDetails = () => {
   const { id } = useParams();
 
@@ -17,8 +17,31 @@ const CarDetails = () => {
   // New state to handle the currently displayed image in the gallery
   const [activeImage, setActiveImage] = useState(null);
   const [payPartial, setPayPartial] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [promoApplied, setPromoApplied] = useState(false);
 
   const currency = import.meta.env.VITE_CURRENCY;
+
+  // Valid promo codes
+  const PROMO_CODES = {
+    'GOA10': 10,
+    'FIRST20': 20,
+    'SUMMER15': 15,
+  };
+
+  const applyPromoCode = () => {
+    const code = promoCode.toUpperCase();
+    if (PROMO_CODES[code]) {
+      setDiscount(PROMO_CODES[code]);
+      setPromoApplied(true);
+      toast.success(`Promo code applied! ${PROMO_CODES[code]}% off`);
+    } else {
+      toast.error("Invalid promo code");
+      setDiscount(0);
+      setPromoApplied(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +50,12 @@ const CarDetails = () => {
       const picked = new Date(pickupDate);
       const returned = new Date(returnDate);
       const noOfDays = Math.ceil((returned - picked) / (1000 * 60 * 60 * 24));
-      const price = car.pricePerDay * noOfDays;
+      let price = car.pricePerDay * noOfDays;
+      
+      // Apply discount if promo code is applied
+      if (discount > 0) {
+        price = price - (price * discount / 100);
+      }
       
       // Simulate payment (e.g., 50% advance or full payment)
       const amountPaid = payPartial ? price / 2 : price; 
@@ -221,6 +249,36 @@ const CarDetails = () => {
             />
           </div>
 
+          {/* Promo Code */}
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Promo Code</label>
+            <div className="flex gap-2">
+              <input
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                type="text"
+                placeholder="Enter promo code"
+                className="border border-borderColor px-3 py-2 rounded-lg outline-none focus:border-primary flex-1"
+                disabled={promoApplied}
+              />
+              <button
+                type="button"
+                onClick={applyPromoCode}
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  promoApplied 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+                disabled={promoApplied}
+              >
+                {promoApplied ? '✓ Applied' : 'Apply'}
+              </button>
+            </div>
+            {promoApplied && (
+              <p className="text-xs text-green-600">🎉 {discount}% discount applied!</p>
+            )}
+          </div>
+
           <div className="flex items-center gap-2">
             <input 
               type="checkbox" 
@@ -237,6 +295,33 @@ const CarDetails = () => {
           <button className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer shadow-md hover:shadow-lg">
             {payPartial ? "Pay 50% & Book" : "Pay Full & Book"}
           </button>
+
+          {/* Notice */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-700">
+              📍 <strong>Note:</strong> Pickup & return time will be coordinated after booking confirmation.
+            </p>
+          </div>
+
+          {/* Cancellation Policy */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-2">
+            <p className="font-medium text-sm text-gray-800">Cancellation Policy</p>
+            <ul className="text-xs text-gray-600 space-y-1">
+              <li>• Free cancellation up to 24 hours before pickup</li>
+              <li>• 50% refund for cancellation within 24 hours</li>
+              <li>• No refund for no-show</li>
+            </ul>
+          </div>
+
+          {/* Payment & Refund Info */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2">
+            <p className="font-medium text-sm text-gray-800">Payment & Refund</p>
+            <ul className="text-xs text-gray-600 space-y-1">
+              <li>• Pay online or cash on pickup</li>
+              <li>• Refunds processed within 5-7 business days</li>
+              <li>• Security deposit may be required</li>
+            </ul>
+          </div>
 
           <p className="text-center text-sm text-gray-400">
             No credit card required to reserve
