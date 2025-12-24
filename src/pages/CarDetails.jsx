@@ -19,30 +19,68 @@ const CarDetails = () => {
   const [activeImage, setActiveImage] = useState(null);
   const [payPartial, setPayPartial] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [discount, setDiscount] = useState(0);
   const [promoApplied, setPromoApplied] = useState(false);
+  const [appliedCouponDetails, setAppliedCouponDetails] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
 
   const currency = import.meta.env.VITE_CURRENCY;
 
-  // Valid promo codes
-  const PROMO_CODES = {
-    'GOA10': 10,
-    'FIRST20': 20,
-    'SUMMER15': 15,
-  };
+  // Fetch available coupons from backend
+  useEffect(() => {
+    const fetchAvailableCoupons = async () => {
+      try {
+        const { data } = await axios.get("/api/user/coupons/active");
+        console.log("Coupons API response:", data);
+        if (data.success && data.coupons) {
+          setAvailableCoupons(data.coupons);
+        }
+      } catch (error) {
+        console.log("Failed to fetch coupons:", error);
+      }
+    };
+    fetchAvailableCoupons();
+  }, [axios]);
 
   const applyPromoCode = () => {
-    const code = promoCode.toUpperCase();
-    if (PROMO_CODES[code]) {
-      setDiscount(PROMO_CODES[code]);
-      setPromoApplied(true);
-      toast.success(`Promo code applied! ${PROMO_CODES[code]}% off`);
-    } else {
-      toast.error("Invalid promo code");
-      setDiscount(0);
-      setPromoApplied(false);
+    const code = promoCode.toUpperCase().trim();
+    if (!code) {
+      toast.error("Please enter a promo code");
+      return;
     }
+    
+    const coupon = availableCoupons.find(c => c.code === code);
+    
+    if (coupon) {
+      setAppliedCouponDetails(coupon);
+      setPromoApplied(true);
+      if (coupon.discountType === 'percentage') {
+        toast.success(`Promo code applied! ${coupon.discountValue}% off`);
+      } else {
+        toast.success(`Promo code applied! ₹${coupon.discountValue} off`);
+      }
+    } else {
+      toast.error("Invalid or expired promo code");
+      setPromoApplied(false);
+      setAppliedCouponDetails(null);
+    }
+  };
+
+  const selectCoupon = (coupon) => {
+    setPromoCode(coupon.code);
+    setAppliedCouponDetails(coupon);
+    setPromoApplied(true);
+    if (coupon.discountType === 'percentage') {
+      toast.success(`Promo code applied! ${coupon.discountValue}% off`);
+    } else {
+      toast.success(`Promo code applied! ₹${coupon.discountValue} off`);
+    }
+  };
+
+  const removePromoCode = () => {
+    setPromoCode("");
+    setPromoApplied(false);
+    setAppliedCouponDetails(null);
   };
 
   // Load Razorpay script
@@ -344,8 +382,44 @@ const CarDetails = () => {
           </div>
 
           {/* Promo Code */}
-          <div className="flex flex-col gap-2">
-            <label className="font-medium">Promo Code</label>
+          <div className="flex flex-col gap-3">
+            <label className="font-medium text-gray-800">Promo Code</label>
+            
+            {/* Available Coupons as Pills - Always visible */}
+            {availableCoupons.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-xs font-semibold text-amber-700 mb-2">
+                  🎁 Available Offers - Click to apply
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {availableCoupons.map((coupon) => (
+                    <button
+                      key={coupon._id}
+                      type="button"
+                      onClick={() => selectCoupon(coupon)}
+                      disabled={promoApplied && appliedCouponDetails?.code === coupon.code}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                        promoApplied && appliedCouponDetails?.code === coupon.code
+                          ? 'bg-green-100 border-green-400 text-green-700 cursor-default'
+                          : 'bg-white border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-400 cursor-pointer'
+                      }`}
+                    >
+                      <span className="font-mono font-bold">{coupon.code}</span>
+                      <span className="text-green-600">
+                        {coupon.discountType === 'percentage' 
+                          ? `${coupon.discountValue}%` 
+                          : `₹${coupon.discountValue}`}
+                      </span>
+                      {promoApplied && appliedCouponDetails?.code === coupon.code && (
+                        <span className="text-green-600">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Manual Promo Code Input */}
             <div className="flex gap-2">
               <input
                 value={promoCode}
@@ -355,21 +429,38 @@ const CarDetails = () => {
                 className="border border-borderColor px-3 py-2 rounded-lg outline-none focus:border-primary flex-1"
                 disabled={promoApplied}
               />
-              <button
-                type="button"
-                onClick={applyPromoCode}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                  promoApplied 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
-                disabled={promoApplied}
-              >
-                {promoApplied ? '✓ Applied' : 'Apply'}
-              </button>
+              {promoApplied ? (
+                <button
+                  type="button"
+                  onClick={removePromoCode}
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-red-100 hover:bg-red-200 text-red-700"
+                >
+                  Remove
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={applyPromoCode}
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700"
+                >
+                  Apply
+                </button>
+              )}
             </div>
-            {promoApplied && (
-              <p className="text-xs text-green-600">🎉 {discount}% discount applied!</p>
+            {promoApplied && appliedCouponDetails && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                <p className="text-xs text-green-700 font-medium flex items-center gap-1">
+                  🎉 Coupon Applied: <span className="font-mono bg-green-100 px-1 rounded">{appliedCouponDetails.code}</span>
+                </p>
+                <p className="text-xs text-green-600 mt-1">
+                  {appliedCouponDetails.discountType === 'percentage' 
+                    ? `${appliedCouponDetails.discountValue}% discount` 
+                    : `₹${appliedCouponDetails.discountValue} off`}
+                  {appliedCouponDetails.maxDiscount && appliedCouponDetails.discountType === 'percentage' && (
+                    <span className="text-gray-500"> (Max ₹{appliedCouponDetails.maxDiscount})</span>
+                  )}
+                </p>
+              </div>
             )}
           </div>
 
