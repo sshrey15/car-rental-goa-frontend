@@ -83,6 +83,42 @@ const CarDetails = () => {
     setAppliedCouponDetails(null);
   };
 
+  // Calculate price based on dates and coupon
+  const calculatePrice = () => {
+    if (!car || !pickupDate || !returnDate) {
+      return { originalPrice: 0, discountAmount: 0, finalPrice: 0, noOfDays: 0 };
+    }
+
+    const picked = new Date(pickupDate);
+    const returned = new Date(returnDate);
+    const noOfDays = Math.max(1, Math.ceil((returned - picked) / (1000 * 60 * 60 * 24)));
+    
+    const originalPrice = car.pricePerDay * noOfDays;
+    let discountAmount = 0;
+
+    if (promoApplied && appliedCouponDetails) {
+      // Check minimum booking amount
+      if (appliedCouponDetails.minBookingAmount && originalPrice < appliedCouponDetails.minBookingAmount) {
+        return { originalPrice, discountAmount: 0, finalPrice: originalPrice, noOfDays, minNotMet: true };
+      }
+
+      if (appliedCouponDetails.discountType === 'percentage') {
+        discountAmount = (originalPrice * appliedCouponDetails.discountValue) / 100;
+        // Apply max discount cap if exists
+        if (appliedCouponDetails.maxDiscount && discountAmount > appliedCouponDetails.maxDiscount) {
+          discountAmount = appliedCouponDetails.maxDiscount;
+        }
+      } else {
+        discountAmount = appliedCouponDetails.discountValue;
+      }
+    }
+
+    const finalPrice = Math.max(0, originalPrice - discountAmount);
+    return { originalPrice, discountAmount, finalPrice, noOfDays };
+  };
+
+  const priceDetails = calculatePrice();
+
   // Load Razorpay script
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -460,9 +496,51 @@ const CarDetails = () => {
                     <span className="text-gray-500"> (Max ₹{appliedCouponDetails.maxDiscount})</span>
                   )}
                 </p>
+                {priceDetails.minNotMet && appliedCouponDetails.minBookingAmount > 0 && (
+                  <p className="text-xs text-red-500 mt-1">
+                    ⚠️ Min. booking ₹{appliedCouponDetails.minBookingAmount} required for this coupon
+                  </p>
+                )}
               </div>
             )}
           </div>
+
+          {/* Price Summary */}
+          {pickupDate && returnDate && priceDetails.noOfDays > 0 && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
+              <p className="font-medium text-sm text-gray-800 mb-3">Price Summary</p>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">
+                  {currency}{car.pricePerDay} × {priceDetails.noOfDays} day{priceDetails.noOfDays > 1 ? 's' : ''}
+                </span>
+                <span className="text-gray-800">{currency}{priceDetails.originalPrice}</span>
+              </div>
+              {priceDetails.discountAmount > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Coupon Discount ({appliedCouponDetails?.code})</span>
+                  <span>-{currency}{priceDetails.discountAmount}</span>
+                </div>
+              )}
+              <hr className="border-gray-200 my-2" />
+              <div className="flex justify-between font-semibold text-base">
+                <span className="text-gray-800">Total</span>
+                <div className="text-right">
+                  {priceDetails.discountAmount > 0 && (
+                    <span className="text-gray-400 line-through text-sm mr-2">
+                      {currency}{priceDetails.originalPrice}
+                    </span>
+                  )}
+                  <span className="text-primary">{currency}{priceDetails.finalPrice}</span>
+                </div>
+              </div>
+              {payPartial && (
+                <div className="flex justify-between text-sm mt-2 pt-2 border-t border-gray-200">
+                  <span className="text-gray-600">Pay Now (50%)</span>
+                  <span className="text-primary font-medium">{currency}{Math.ceil(priceDetails.finalPrice / 2)}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <input 
