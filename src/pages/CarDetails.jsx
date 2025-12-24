@@ -5,10 +5,11 @@ import Loader from "../components/Loader";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 import{ motion} from "motion/react";
+
 const CarDetails = () => {
   const { id } = useParams();
 
-  const { cars, axios, pickupDate, setPickupDate, returnDate, setReturnDate } =
+  const { cars, axios, pickupDate, setPickupDate, returnDate, setReturnDate, user, setShowLogin } =
     useAppContext();
 
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const CarDetails = () => {
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [promoApplied, setPromoApplied] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const currency = import.meta.env.VITE_CURRENCY;
 
@@ -43,38 +45,130 @@ const CarDetails = () => {
     }
   };
 
+  // Load Razorpay script
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      // Calculate price for payment simulation
-      const picked = new Date(pickupDate);
-      const returned = new Date(returnDate);
-      const noOfDays = Math.ceil((returned - picked) / (1000 * 60 * 60 * 24));
-      let price = car.pricePerDay * noOfDays;
-      
-      // Apply discount if promo code is applied
-      if (discount > 0) {
-        price = price - (price * discount / 100);
-      }
-      
-      // Simulate payment (e.g., 50% advance or full payment)
-      const amountPaid = payPartial ? price / 2 : price; 
+    
+    // Check if user is logged in
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
 
-      const { data } = await axios.post("/api/bookings/create", {
+    if (!pickupDate || !returnDate) {
+      toast.error("Please select pickup and return dates");
+      return;
+    }
+
+    const picked = new Date(pickupDate);
+    const returned = new Date(returnDate);
+    
+    if (returned <= picked) {
+      toast.error("Return date must be after pickup date");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        toast.error("Failed to load payment gateway. Please try again.");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Create payment order
+      const { data } = await axios.post("/api/payment/create-order", {
         car: id,
         pickupDate,
         returnDate,
-        amountPaid
+        couponCode: promoApplied ? promoCode : null,
+        payPartial,
       });
 
-      if (data.success) {
-        toast.success(data.message);
-        navigate("/my-bookings");
-      } else {
+      if (!data.success) {
         toast.error(data.message);
+        setIsProcessing(false);
+        return;
       }
+
+      // Razorpay options
+      const options = {
+        key: data.keyId,
+        amount: data.amount * 100,
+        currency: data.currency,
+        name: "Car Rental Goa",
+        description: `Booking for ${car.brand} ${car.model}`,
+        order_id: data.orderId,
+        handler: async function (response) {
+          try {
+            // Verify payment
+            const verifyRes = await axios.post("/api/payment/verify", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              bookingId: data.bookingId,
+            });
+
+            if (verifyRes.data.success) {
+              toast.success("Payment successful!");
+              // Redirect to My Bookings with success params
+              navigate(`/my-bookings?payment=success&bookingId=${data.bookingId}`);
+            } else {
+              toast.error(verifyRes.data.message || "Payment verification failed");
+              navigate("/my-bookings");
+            }
+          } catch {
+            toast.error("Payment verification failed");
+            navigate("/my-bookings");
+          }
+        },
+        prefill: {
+          name: user?.name || "",
+          email: user?.email || "",
+          contact: user?.phone || "",
+        },
+        notes: {
+          carId: id,
+          pickupDate,
+          returnDate,
+        },
+        theme: {
+          color: "#3B82F6",
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
+            toast.error("Payment cancelled");
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.on("payment.failed", function (response) {
+        toast.error(response.error.description || "Payment failed");
+        setIsProcessing(false);
+      });
+      razorpay.open();
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Something went wrong");
+      setIsProcessing(false);
     }
   };
 
@@ -292,8 +386,25 @@ const CarDetails = () => {
             </label>
           </div>
 
-          <button className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer shadow-md hover:shadow-lg">
-            {payPartial ? "Pay 50% & Book" : "Pay Full & Book"}
+          <button 
+            disabled={isProcessing}
+            className={`w-full py-3 font-medium text-white rounded-xl cursor-pointer shadow-md hover:shadow-lg transition-all ${
+              isProcessing 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-primary hover:bg-primary-dull'
+            }`}
+          >
+            {isProcessing ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </span>
+            ) : (
+              payPartial ? "Pay 50% & Book" : "Pay Full & Book"
+            )}
           </button>
 
           {/* Notice */}

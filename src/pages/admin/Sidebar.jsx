@@ -12,6 +12,8 @@ const Sidebar = () => {
         { path: '/admin/cars', label: 'Manage Vehicles', icon: assets.carIcon },
         { path: '/admin/bookings', label: 'All Bookings', icon: assets.listIcon },
         { path: '/admin/users', label: 'All Users', icon: assets.users_icon },
+        { path: '/admin/coupons', label: 'Coupons', icon: assets.listIcon },
+        { path: '/admin/locations', label: 'Locations', icon: assets.locationIcon || assets.listIcon },
     ]
 
     return (

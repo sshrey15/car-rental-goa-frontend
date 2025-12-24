@@ -20,6 +20,11 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminCars from './pages/admin/AdminCars'
 import AdminBookings from './pages/admin/AdminBookings'
 import AdminUsers from './pages/admin/AdminUsers'
+import AdminCoupons from './pages/admin/AdminCoupons'
+import AdminLocations from './pages/admin/AdminLocations'
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
+import PaymentSuccess from './pages/PaymentSuccess'
 
 const App = () => {
 
@@ -40,6 +45,9 @@ const App = () => {
       <Route path='/car-details/:id' element={<CarDetails/>}/>
       <Route path='/cars' element={<Cars/>}/>
       <Route path='/my-bookings' element={<MyBookings/>}/>
+      <Route path='/terms' element={<Terms/>}/>
+      <Route path='/privacy' element={<Privacy/>}/>
+      <Route path='/payment-success/:bookingId' element={<PaymentSuccess/>}/>
       
       <Route path='/owner' element={<Layout />}>
         <Route index element={<Dashboard />}/>
@@ -53,6 +61,8 @@ const App = () => {
         <Route path="cars" element={<AdminCars />}/>
         <Route path="bookings" element={<AdminBookings />}/>
         <Route path="users" element={<AdminUsers />}/>
+        <Route path="coupons" element={<AdminCoupons />}/>
+        <Route path="locations" element={<AdminLocations />}/>
       </Route>
     </Routes>
 

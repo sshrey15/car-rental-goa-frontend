@@ -3,13 +3,13 @@ import { assets, cityList } from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
 import { motion, AnimatePresence } from "motion/react";
 
-import { Plane, Bus, Train, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 const Hero = () => {
   const [pickupLocation, setPickupLocation] = useState("");
-  const [activeLocationType, setActiveLocationType] = useState("airport"); // Default state
+  const [selectedLocation, setSelectedLocation] = useState(""); // Selected location pill
 
-  const { pickupDate, setPickupDate, returnDate, setReturnDate, navigate } =
+  const { pickupDate, setPickupDate, returnDate, setReturnDate, navigate, locations } =
     useAppContext();
 
   const heroCars = [
@@ -29,20 +29,18 @@ const Hero = () => {
     return () => clearInterval(interval);
   }, [heroCars.length]);
 
-  // Definition for your pills
-  const locationCategories = [
-    { id: "airport", label: "Airport", icon: Plane },
-    { id: "bus_stand", label: "Bus Stand", icon: Bus },
-    { id: "train_station", label: "Station", icon: Train },
-    { id: "city_center", label: "City Center", icon: MapPin },
-  ];
-
   const handleSearch = (e) => {
     e.preventDefault();
-    // Included locationType in the search params
+    // Include selected location in the search params
     navigate(
-      `/cars?pickupLocation=${pickupLocation}&pickupDate=${pickupDate}&returnDate=${returnDate}&locationType=${activeLocationType}`,
+      `/cars?pickupLocation=${pickupLocation}&pickupDate=${pickupDate}&returnDate=${returnDate}${selectedLocation ? `&location=${selectedLocation}` : ''}`,
     );
+  };
+
+  // Handle location pill click - navigate to cars page with location filter
+  const handleLocationClick = (locationName) => {
+    setSelectedLocation(locationName);
+    navigate(`/cars?location=${encodeURIComponent(locationName)}`);
   };
 
   return (
@@ -62,30 +60,31 @@ const Hero = () => {
       >
         One stop solution for all your <br /> vehicle rental needs in <span className="text-blue-500">Goa</span>  🌴
       </motion.h1>
-      {/* --- NEW: Location Type Pills --- */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        className="flex items-center gap-4 overflow-x-auto no-scrollbar py-2 w-full justify-center"
-      >
-        {locationCategories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveLocationType(cat.id)}
-            className={`flex items-center gap-2 px-6 py-2 rounded-full transition-all duration-300 border shadow-sm whitespace-nowrap
-                        ${
-                          activeLocationType === cat.id
-                            ? "bg-primary text-white border-primary scale-105 shadow-md"
-                            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                        }`}
-          >
-            <cat.icon size={18} />
-
-            <span className="font-medium text-sm">{cat.label}</span>
-          </button>
-        ))}
-      </motion.div>
+      {/* --- Location Pills from Database --- */}
+      {locations.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="flex items-center gap-3 flex-wrap justify-center py-2 w-full max-w-4xl"
+        >
+          {locations.map((loc) => (
+            <button
+              key={loc._id}
+              onClick={() => handleLocationClick(loc.name)}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-300 border shadow-sm whitespace-nowrap cursor-pointer
+                          ${
+                            selectedLocation === loc.name
+                              ? "bg-primary text-white border-primary scale-105 shadow-md"
+                              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-primary hover:text-primary"
+                          }`}
+            >
+              <MapPin size={16} />
+              <span className="font-medium text-sm">{loc.name}</span>
+            </button>
+          ))}
+        </motion.div>
+      )}
       <motion.form
         initial={{ scale: 0.95, opacity: 0, y: 50 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}

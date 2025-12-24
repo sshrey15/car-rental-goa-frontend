@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Title from "../../components/owner/Title";
 import { assets } from "../../assets/assets";
 import { useAppContext } from "../../context/AppContext";
@@ -13,6 +13,10 @@ const AddCar = () => {
   // Helper to manage preview URLs to avoid memory leaks
   const [previewUrls, setPreviewUrls] = useState([]);
 
+  // State for locations and coupons from database
+  const [locations, setLocations] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+
   const [car, setCar] = useState({
     brand: "",
     model: "",
@@ -24,10 +28,40 @@ const AddCar = () => {
     seating_capacity: "",
     location: "",
     description: "",
+    appliedCoupon: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [isCustomLocation, setIsCustomLocation] = useState(false);
+  const [customLocation, setCustomLocation] = useState("");
+
+  // Fetch locations and coupons from database
+  const fetchLocations = useCallback(async () => {
+    try {
+      const { data } = await axios.get('/api/admin/locations/active');
+      if (data.success) {
+        setLocations(data.locations);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }, [axios]);
+
+  const fetchCoupons = useCallback(async () => {
+    try {
+      const { data } = await axios.get('/api/admin/coupons/active');
+      if (data.success) {
+        setCoupons(data.coupons);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }, [axios]);
+
+  useEffect(() => {
+    fetchLocations();
+    fetchCoupons();
+  }, [fetchLocations, fetchCoupons]);
 
   // Cleanup object URLs when images change
   useEffect(() => {
@@ -42,6 +76,32 @@ const AddCar = () => {
     };
   }, [images]);
 
+  // Function to add custom location to database
+  const addCustomLocation = async () => {
+    if (!customLocation.trim()) {
+      toast.error("Please enter a location name");
+      return;
+    }
+    
+    try {
+      const { data } = await axios.post('/api/admin/location/create', {
+        name: customLocation.trim()
+      });
+      
+      if (data.success) {
+        toast.success("Location added successfully!");
+        setCar({ ...car, location: customLocation.trim() });
+        setIsCustomLocation(false);
+        setCustomLocation("");
+        fetchLocations(); // Refresh locations list
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     if (isLoading) return null;
@@ -49,6 +109,10 @@ const AddCar = () => {
     // Basic Validation
     if (images.length === 0) {
       return toast.error("Please upload at least one image");
+    }
+
+    if (!car.location) {
+      return toast.error("Please select a location");
     }
 
     setIsLoading(true);
@@ -59,7 +123,13 @@ const AddCar = () => {
         formData.append("images", image);
       });
 
-      formData.append("carData", JSON.stringify(car));
+      // Remove empty appliedCoupon before sending
+      const carData = { ...car };
+      if (!carData.appliedCoupon) {
+        delete carData.appliedCoupon;
+      }
+
+      formData.append("carData", JSON.stringify(carData));
 
       const { data } = await axios.post("/api/owner/add-car", formData);
 
@@ -78,6 +148,7 @@ const AddCar = () => {
           seating_capacity: "",
           location: "",
           description: "",
+          appliedCoupon: "",
         });
         setIsCustomLocation(false);
       } else {
@@ -277,21 +348,51 @@ const AddCar = () => {
             className="px-3 py-2 mt-1 border border-borderColor rounded-md outline-none"
           >
             <option value="">Select Location</option>
-            <option value="Airport">Airport</option>
-            <option value="City Center">City Center</option>
-            <option value="Train Station">Train Station</option>
-            <option value="Other">Other (Custom)</option>
+            {locations.map((location) => (
+              <option key={location._id} value={location.name}>
+                {location.name}
+              </option>
+            ))}
+            <option value="Other">Other (Add New Location)</option>
           </select>
           {isCustomLocation && (
-            <input
-              type="text"
-              placeholder="Enter custom location"
-              className="px-3 py-2 mt-2 border border-borderColor rounded-md outline-none"
-              value={car.location}
-              onChange={(e) => setCar({ ...car, location: e.target.value })}
-              required
-            />
+            <div className="flex gap-2 mt-2">
+              <input
+                type="text"
+                placeholder="Enter new location name"
+                className="px-3 py-2 border border-borderColor rounded-md outline-none flex-1"
+                value={customLocation}
+                onChange={(e) => setCustomLocation(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={addCustomLocation}
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dull"
+              >
+                Add
+              </button>
+            </div>
           )}
+        </div>
+
+        {/* Coupon Selection */}
+        <div className="flex flex-col w-full">
+          <label>Apply Coupon (Optional)</label>
+          <select
+            onChange={(e) => setCar({ ...car, appliedCoupon: e.target.value })}
+            value={car.appliedCoupon}
+            className="px-3 py-2 mt-1 border border-borderColor rounded-md outline-none"
+          >
+            <option value="">No Coupon</option>
+            {coupons.map((coupon) => (
+              <option key={coupon._id} value={coupon._id}>
+                {coupon.code} - {coupon.discountType === 'percentage' ? `${coupon.discountValue}% off` : `${currency}${coupon.discountValue} off`}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Select a coupon to offer discount to customers booking this vehicle
+          </p>
         </div>
 
         {/* Car Description */}

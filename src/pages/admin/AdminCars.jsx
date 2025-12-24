@@ -5,10 +5,26 @@ import toast from 'react-hot-toast'
 const AdminCars = () => {
     const { axios, currency } = useAppContext()
     const [cars, setCars] = useState([])
+    const [locations, setLocations] = useState([])
+    const [selectedLocation, setSelectedLocation] = useState('all')
+
+    const fetchLocations = useCallback(async () => {
+        try {
+            const { data } = await axios.get('/api/admin/locations')
+            if (data.success) {
+                setLocations(data.locations)
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }, [axios])
 
     const fetchCars = useCallback(async () => {
         try {
-            const { data } = await axios.get('/api/admin/cars')
+            const url = selectedLocation === 'all' 
+                ? '/api/admin/cars' 
+                : `/api/admin/cars?location=${encodeURIComponent(selectedLocation)}`
+            const { data } = await axios.get(url)
             if (data.success) {
                 setCars(data.cars)
             }
@@ -16,7 +32,7 @@ const AdminCars = () => {
             console.log(error)
             toast.error(error.message)
         }
-    }, [axios])
+    }, [axios, selectedLocation])
 
     const toggleApproval = async (carId, currentStatus) => {
         try {
@@ -37,12 +53,47 @@ const AdminCars = () => {
     }
 
     useEffect(() => {
+        fetchLocations()
+    }, [fetchLocations])
+
+    useEffect(() => {
         fetchCars()
     }, [fetchCars])
 
+    // Get unique locations from cars for filter
+    const uniqueLocations = [...new Set(cars.map(car => car.location))].filter(Boolean)
+
     return (
         <div className='flex flex-col gap-6'>
-            <h1 className='text-2xl font-bold text-gray-800'>Manage Vehicles</h1>
+            <div className='flex justify-between items-center'>
+                <h1 className='text-2xl font-bold text-gray-800'>Manage Vehicles</h1>
+                
+                {/* Location Filter */}
+                <div className='flex items-center gap-2'>
+                    <label className='text-sm text-gray-600'>Filter by Location:</label>
+                    <select
+                        value={selectedLocation}
+                        onChange={(e) => setSelectedLocation(e.target.value)}
+                        className='border border-gray-200 rounded-lg px-3 py-2 text-sm outline-primary'
+                    >
+                        <option value='all'>All Locations</option>
+                        {locations.map((location) => (
+                            <option key={location._id} value={location.name}>
+                                {location.name}
+                            </option>
+                        ))}
+                        {/* Also include unique locations from cars that might not be in locations list */}
+                        {uniqueLocations
+                            .filter(loc => !locations.some(l => l.name === loc))
+                            .map((location) => (
+                                <option key={location} value={location}>
+                                    {location}
+                                </option>
+                            ))
+                        }
+                    </select>
+                </div>
+            </div>
 
             <div className='bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden'>
                 <div className='overflow-x-auto'>
@@ -51,7 +102,9 @@ const AdminCars = () => {
                             <tr>
                                 <th className='p-4 font-medium'>Vehicle</th>
                                 <th className='p-4 font-medium'>Owner</th>
+                                <th className='p-4 font-medium'>Location</th>
                                 <th className='p-4 font-medium'>Price/Day</th>
+                                <th className='p-4 font-medium'>Coupon</th>
                                 <th className='p-4 font-medium'>Status</th>
                                 <th className='p-4 font-medium'>Action</th>
                             </tr>
@@ -74,8 +127,22 @@ const AdminCars = () => {
                                             <p className='text-xs text-gray-500'>{car.owner?.phone}</p>
                                         </div>
                                     </td>
+                                    <td className='p-4'>
+                                        <span className='px-2 py-1 bg-gray-100 rounded text-xs'>
+                                            {car.location}
+                                        </span>
+                                    </td>
                                     <td className='p-4 font-medium'>
                                         {currency}{car.pricePerDay}
+                                    </td>
+                                    <td className='p-4'>
+                                        {car.appliedCoupon ? (
+                                            <span className='px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium'>
+                                                {car.appliedCoupon.code}
+                                            </span>
+                                        ) : (
+                                            <span className='text-gray-400 text-xs'>None</span>
+                                        )}
                                     </td>
                                     <td className='p-4'>
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -100,6 +167,13 @@ const AdminCars = () => {
                                     </td>
                                 </tr>
                             ))}
+                            {cars.length === 0 && (
+                                <tr>
+                                    <td colSpan="7" className='p-8 text-center text-gray-500'>
+                                        No vehicles found for the selected location.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

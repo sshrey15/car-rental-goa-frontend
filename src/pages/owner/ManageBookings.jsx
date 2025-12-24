@@ -113,11 +113,23 @@ const ManageBookings = () => {
                       <option value="confirmed">Confirmed</option>
                     </select>
                   ) : (
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${booking.status === "confirmed" ? "bg-green-100 text-green-500" : "bg-red-100 text-red-500"}`}
-                    >
-                      {booking.status}
-                    </span>
+                    <div className="flex flex-col gap-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${booking.status === "confirmed" ? "bg-green-100 text-green-500" : "bg-red-100 text-red-500"}`}
+                      >
+                        {booking.status}
+                      </span>
+                      {booking.status === "confirmed" && (
+                        <a 
+                          href={`${import.meta.env.VITE_BASE_URL}/api/bookings/pdf/${booking._id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1 bg-primary text-white rounded-md text-xs font-medium hover:bg-primary-dull transition-colors text-center"
+                        >
+                          PDF
+                        </a>
+                      )}
+                    </div>
                   )}
                 </td>
               </tr>

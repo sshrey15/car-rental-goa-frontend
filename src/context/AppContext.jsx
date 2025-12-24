@@ -20,6 +20,7 @@ export const AppProvider = ({ children })=>{
     const [returnDate, setReturnDate] = useState('')
 
     const [cars, setCars] = useState([])
+    const [locations, setLocations] = useState([])
 
     // Function to check if user is logged in
     const fetchUser = async ()=>{
@@ -46,6 +47,16 @@ export const AppProvider = ({ children })=>{
         }
     }
 
+    // Function to fetch all active locations from the server
+    const fetchLocations = async () =>{
+        try {
+            const {data} = await axios.get('/api/user/locations')
+            data.success ? setLocations(data.locations) : toast.error(data.message)
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
+
     // Function to log out the user
     const logout = ()=>{
         localStorage.removeItem('token')
@@ -62,6 +73,7 @@ export const AppProvider = ({ children })=>{
         const token = localStorage.getItem('token')
         setToken(token)
         fetchCars()
+        fetchLocations()
     },[])
 
     // useEffect to fetch user data when token is available
@@ -75,7 +87,8 @@ export const AppProvider = ({ children })=>{
     const value = {
         navigate, currency, axios, user, setUser,
         token, setToken, isOwner, setIsOwner, fetchUser, showLogin, setShowLogin, logout, fetchCars, cars, setCars, 
-        pickupDate, setPickupDate, returnDate, setReturnDate
+        pickupDate, setPickupDate, returnDate, setReturnDate,
+        locations, setLocations, fetchLocations
     }
 
     return (
