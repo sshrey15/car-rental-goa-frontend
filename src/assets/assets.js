@@ -17,12 +17,14 @@ import dashboardIcon from "./dashboardIcon.svg";
 import dashboardIconColored from "./dashboardIconColored.svg";
 import addIconColored from "./addIconColored.svg";
 import listIcon from "./listIcon.svg";
+import video3 from "./video3.mp4";
 import listIconColored from "./listIconColored.svg";
 import cautionIconColored from "./cautionIconColored.svg";
 import arrow_icon from "./arrow_icon.svg";
 import star_icon from "./star_icon.svg";
 import check_icon from "./check_icon.svg";
 import tick_icon from "./tick_icon.svg";
+import video2 from "./video2.mp4";
 import delete_icon from "./delete_icon.svg";
 import eye_icon from "./eye_icon.svg";
 import eye_close_icon from "./eye_close_icon.svg";
@@ -41,6 +43,7 @@ import car_image2 from "./car_image2.png";
 import car_image3 from "./car_image3.png";
 import car_image4 from "./car_image4.png";
 import bike from "./bike.png";
+import video1 from "./video1.mp4";
 
 export const cityList = ["Panjim KTC", "Margao KTC", "Airport", "Calangute"];
 
@@ -56,6 +59,8 @@ export const assets = {
   users_icon,
   edit_icon,
   car_icon,
+  video1,
+  video2,
   location_icon,
   fuel_icon,
   addIcon,
@@ -81,6 +86,7 @@ export const assets = {
   testimonial_image_2,
   bike,
   main_car,
+  video3,
   banner_car_image,
   car_image1,
   upload_icon,
